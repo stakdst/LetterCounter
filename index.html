@@ -84,7 +84,7 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       font-family: inherit;
-      font-size: 16px;
+      font-size: var(--textarea-font-size, 12px);
       line-height: 1.7;
       resize: vertical;
     }
@@ -126,6 +126,84 @@
     .paste-button:hover {
       background-color: #357abd;
       color: #fff;
+    }
+
+    /* ===== 文字サイズ調整スライダー ===== */
+    .font-size-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 12px 16px;
+      border: 1px solid #e8eaf0;
+      border-radius: 8px;
+      background-color: #f7f8fa;
+    }
+
+    .font-size-label {
+      flex: 0 0 auto;
+      font-size: 14px;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    .font-size-slider-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .font-size-mark {
+      flex: 0 0 auto;
+      color: #777;
+      font-weight: bold;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .font-size-mark.small {
+      font-size: 12px;
+    }
+
+    .font-size-mark.large {
+      font-size: 20px;
+    }
+
+    .font-size-slider {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 24px;
+      margin: 0;
+      accent-color: #4a90e2;
+      cursor: pointer;
+    }
+
+    .font-size-value {
+      flex: 0 0 auto;
+      min-width: 52px;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: right;
+      color: #333;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .reset-button {
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      border: 1px solid #ccd3de;
+      border-radius: 6px;
+      background-color: #fff;
+      color: #555;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .reset-button:hover {
+      background-color: #eef0f4;
     }
 
     .results {
@@ -212,6 +290,20 @@
       .action-button {
         flex: 1;
       }
+
+      .font-size-control {
+        flex-wrap: wrap;
+        gap: 8px 12px;
+      }
+
+      .font-size-slider-wrap {
+        order: 3;
+        flex: 1 1 100%;
+      }
+
+      .font-size-value {
+        margin-left: auto;
+      }
     }
   </style>
 </head>
@@ -261,6 +353,32 @@
       </button>
     </div>
 
+    <!-- 文字サイズ調整 -->
+    <div class="font-size-control">
+      <label class="font-size-label" for="fontSizeSlider">文字の大きさ</label>
+
+      <div class="font-size-slider-wrap">
+        <span class="font-size-mark small" aria-hidden="true">あ</span>
+        <input
+          type="range"
+          id="fontSizeSlider"
+          class="font-size-slider"
+          min="6"
+          max="30"
+          step="1"
+          value="16"
+          aria-label="テキストボックスの文字の大きさ"
+        >
+        <span class="font-size-mark large" aria-hidden="true">あ</span>
+      </div>
+
+      <output id="fontSizeValue" class="font-size-value" for="fontSizeSlider">16px</output>
+
+      <button type="button" id="fontSizeReset" class="reset-button">
+        リセット
+      </button>
+    </div>
+
     <!-- カウント結果 -->
     <section class="results" aria-label="カウント結果">
 
@@ -300,9 +418,15 @@
   </main>
 
   <script>
+    const DEFAULT_FONT_SIZE = 16;
+    const FONT_SIZE_STORAGE_KEY = "textCounterFontSize";
+
     const textInput = document.getElementById("textInput");
     const pasteButton = document.getElementById("pasteButton");
     const copyButton = document.getElementById("copyButton");
+    const fontSizeSlider = document.getElementById("fontSizeSlider");
+    const fontSizeValue = document.getElementById("fontSizeValue");
+    const fontSizeReset = document.getElementById("fontSizeReset");
 
     function normalizeLineBreaks(text) {
       return text.replace(/\r\n?/g, "\n");
@@ -335,6 +459,49 @@
 
       document.getElementById("lines").textContent = lineCount;
     }
+
+    /* ===== 文字サイズ調整 ===== */
+    function applyFontSize(size) {
+      const min = Number(fontSizeSlider.min);
+      const max = Number(fontSizeSlider.max);
+      const parsed = Number(size);
+      const safeSize = Number.isFinite(parsed)
+        ? Math.min(max, Math.max(min, parsed))
+        : DEFAULT_FONT_SIZE;
+
+      textInput.style.setProperty("--textarea-font-size", safeSize + "px");
+      fontSizeSlider.value = safeSize;
+      fontSizeValue.textContent = safeSize + "px";
+
+      return safeSize;
+    }
+
+    function saveFontSize(size) {
+      try {
+        localStorage.setItem(FONT_SIZE_STORAGE_KEY, String(size));
+      } catch (error) {
+        // localStorage が使えない環境では保存を諦める
+      }
+    }
+
+    function loadFontSize() {
+      try {
+        const saved = localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+        return saved === null ? DEFAULT_FONT_SIZE : saved;
+      } catch (error) {
+        return DEFAULT_FONT_SIZE;
+      }
+    }
+
+    fontSizeSlider.addEventListener("input", function () {
+      const size = applyFontSize(fontSizeSlider.value);
+      saveFontSize(size);
+    });
+
+    fontSizeReset.addEventListener("click", function () {
+      const size = applyFontSize(DEFAULT_FONT_SIZE);
+      saveFontSize(size);
+    });
 
     textInput.addEventListener("input", updateCounts);
 
@@ -388,6 +555,7 @@
       }
     });
 
+    applyFontSize(loadFontSize());
     updateCounts();
   </script>
 </body>
