@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -27,10 +28,24 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     }
 
+    /* タイトルのシンプルな装飾 */
     h1 {
       margin: 0 0 24px;
+      padding-bottom: 14px;
       font-size: 26px;
       text-align: center;
+      border-bottom: 2px solid #4a90e2;
+      position: relative;
+    }
+
+    h1::after {
+      content: "";
+      display: block;
+      width: 48px;
+      height: 4px;
+      margin: 12px auto -20px;
+      background-color: #4a90e2;
+      border-radius: 4px;
     }
 
     textarea {
@@ -53,39 +68,36 @@
 
     .controls {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: flex-end;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       margin-top: 16px;
     }
 
-    .realtime-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .realtime-label input {
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-
-    .copy-button {
-      padding: 9px 20px;
+    .action-button {
+      min-width: 100px;
+      padding: 10px 20px;
       border: 1px solid #4a90e2;
       border-radius: 5px;
       background-color: #fff;
       color: #2878c7;
       font-size: 14px;
       cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
     }
 
-    .copy-button:hover {
+    .action-button:hover {
       background-color: #edf5ff;
+    }
+
+    .paste-button {
+      background-color: #4a90e2;
+      color: #fff;
+    }
+
+    .paste-button:hover {
+      background-color: #357abd;
+      color: #fff;
     }
 
     .results {
@@ -102,9 +114,9 @@
       gap: 12px;
       min-width: 0;
       padding: 16px;
+      border: 1px solid #e8eaf0;
       border-radius: 6px;
       background-color: #f7f8fa;
-      border: 1px solid #e8eaf0;
     }
 
     .result-label {
@@ -147,6 +159,14 @@
       textarea {
         min-height: 220px;
       }
+
+      .controls {
+        justify-content: stretch;
+      }
+
+      .action-button {
+        flex: 1;
+      }
     }
   </style>
 </head>
@@ -164,14 +184,21 @@
       aria-label="カウントする文章"
     ></textarea>
 
-    <!-- リアルタイムカウント・コピー -->
+    <!-- ペースト・コピー -->
     <div class="controls">
-      <label class="realtime-label" for="realtime">
-        <input type="checkbox" id="realtime" checked>
-        リアルタイムにカウント
-      </label>
+      <button
+        type="button"
+        id="pasteButton"
+        class="action-button paste-button"
+      >
+        ペースト
+      </button>
 
-      <button type="button" id="copyButton" class="copy-button">
+      <button
+        type="button"
+        id="copyButton"
+        class="action-button"
+      >
         コピー
       </button>
     </div>
@@ -216,7 +243,7 @@
 
   <script>
     const textInput = document.getElementById("textInput");
-    const realtime = document.getElementById("realtime");
+    const pasteButton = document.getElementById("pasteButton");
     const copyButton = document.getElementById("copyButton");
 
     // 改行コードを統一
@@ -224,7 +251,7 @@
       return text.replace(/\r\n?/g, "\n");
     }
 
-    // 文字数をカウント
+    // Unicodeコードポイント単位で文字数をカウント
     function countCharacters(text) {
       return Array.from(text).length;
     }
@@ -233,11 +260,11 @@
     function updateCounts() {
       const text = normalizeLineBreaks(textInput.value);
 
-      // 文字数：改行を含む
+      // 文字数：改行・空白を含む
       document.getElementById("count").textContent =
         countCharacters(text);
 
-      // 改行除く
+      // 改行を除く
       const withoutNewlines = text.replace(/\n/g, "");
 
       document.getElementById("withoutCrCount").textContent =
@@ -258,17 +285,39 @@
       document.getElementById("lines").textContent = lineCount;
     }
 
-    // 入力時にリアルタイムカウント
-    textInput.addEventListener("input", function () {
-      if (realtime.checked) {
-        updateCounts();
-      }
-    });
+    // 入力・編集のたびにリアルタイムでカウント
+    textInput.addEventListener("input", updateCounts);
 
-    // リアルタイムカウントの切り替え
-    realtime.addEventListener("change", function () {
-      if (realtime.checked) {
-        updateCounts();
+    // クリップボードからペースト
+    pasteButton.addEventListener("click", async function () {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+          throw new Error("Clipboard API is not available");
+        }
+
+        const clipboardText = await navigator.clipboard.readText();
+
+        // 現在の入力欄にある文章を置き換える
+        textInput.value = clipboardText;
+
+        // 入力イベントを発生させてカウントを更新
+        textInput.dispatchEvent(
+          new Event("input", { bubbles: true })
+        );
+
+        textInput.focus();
+
+        pasteButton.textContent = "貼り付けました";
+
+        setTimeout(function () {
+          pasteButton.textContent = "ペースト";
+        }, 1500);
+
+      } catch (error) {
+        alert(
+          "クリップボードを読み取れませんでした。\n" +
+          "ブラウザの貼り付け許可を確認するか、テキストボックス内で直接貼り付けてください。"
+        );
       }
     });
 
@@ -286,7 +335,7 @@
         }, 1500);
 
       } catch (error) {
-        // Clipboard APIが使用できない場合の代替処理
+        // Clipboard APIが使えない場合の代替処理
         textInput.focus();
         textInput.select();
 
@@ -299,7 +348,9 @@
             copyButton.textContent = "コピー";
           }, 1500);
         } else {
-          alert("コピーできませんでした。文章を選択してコピーしてください。");
+          alert(
+            "コピーできませんでした。文章を選択してコピーしてください。"
+          );
         }
 
         window.getSelection()?.removeAllRanges();
@@ -308,7 +359,6 @@
 
     // 初期表示
     updateCounts();
-    textInput.focus();
   </script>
 </body>
 </html>
