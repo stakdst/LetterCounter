@@ -1,9 +1,16 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+
   <title>文字数カウント</title>
+
+  <!-- ファビコン・ホーム画面用アイコン -->
+  <link rel="icon" href="./textcount.png">
+  <link rel="apple-touch-icon" href="./textcount.png">
+
   <style>
     * {
       box-sizing: border-box;
@@ -36,22 +43,15 @@
       border-bottom: 1px solid #eef0f4;
     }
 
+    /* タイトル左側の画像アイコン */
     .title-icon {
       flex: 0 0 auto;
       width: 52px;
       height: 52px;
-      display: grid;
-      place-items: center;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-      box-shadow: 0 6px 16px rgba(74, 144, 226, 0.28);
-      color: #fff;
-    }
-
-    .title-icon svg {
-      width: 26px;
-      height: 26px;
       display: block;
+      object-fit: cover;
+      border-radius: 14px;
+      box-shadow: 0 6px 16px rgba(74, 144, 226, 0.20);
     }
 
     .title-text {
@@ -264,11 +264,6 @@
         border-radius: 12px;
       }
 
-      .title-icon svg {
-        width: 22px;
-        height: 22px;
-      }
-
       h1 {
         font-size: 22px;
       }
@@ -307,26 +302,22 @@
 
     <!-- タイトル -->
     <header class="header">
-      <div class="title-icon" aria-hidden="true">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <path d="M14 2v6h6"/>
-          <path d="M9 13h6"/>
-          <path d="M9 17h4"/>
-        </svg>
-      </div>
+
+      <!-- タイトルアイコン画像 -->
+      <img
+        src="./textcount.png"
+        alt=""
+        class="title-icon"
+        width="52"
+        height="52"
+        aria-hidden="true"
+      >
 
       <div class="title-text">
         <p class="eyebrow">TEXT COUNTER</p>
         <h1>文字数カウント</h1>
       </div>
+
     </header>
 
     <!-- テキストボックス -->
@@ -338,6 +329,7 @@
 
     <!-- ペースト・コピー・消去 -->
     <div class="controls">
+
       <button
         type="button"
         id="pasteButton"
@@ -363,9 +355,10 @@
       >
         消去
       </button>
+
     </div>
 
-    <!-- 文字サイズ調整：1行のコンパクト表示 -->
+    <!-- 文字サイズ調整 -->
     <div class="font-size-control" aria-label="文字サイズ調整">
 
       <output
@@ -375,6 +368,7 @@
       >12px</output>
 
       <div class="font-size-slider-wrap">
+
         <span class="font-size-mark small" aria-hidden="true">あ</span>
 
         <input
@@ -389,6 +383,7 @@
         >
 
         <span class="font-size-mark large" aria-hidden="true">あ</span>
+
       </div>
     </div>
 
@@ -613,3 +608,4 @@
   </script>
 </body>
 </html>
+```
