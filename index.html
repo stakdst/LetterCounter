@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-
-  <title>文字数カウント</title>
-
+  <title>文字数カウント2</title>
   <link rel="icon" href="./textcount.png">
   <link rel="apple-touch-icon" href="./textcount.png">
 
@@ -300,7 +298,6 @@
 
     <!-- タイトル -->
     <header class="header">
-
       <!-- タイトルアイコン画像 -->
       <img
         src="./textcount.png"
@@ -315,7 +312,6 @@
         <p class="eyebrow">TEXT COUNTER</p>
         <h1>文字数カウント</h1>
       </div>
-
     </header>
 
     <!-- テキストボックス -->
@@ -327,7 +323,6 @@
 
     <!-- ペースト・コピー・消去 -->
     <div class="controls">
-
       <button
         type="button"
         id="pasteButton"
@@ -353,12 +348,10 @@
       >
         消去
       </button>
-
     </div>
 
     <!-- 文字サイズ調整 -->
     <div class="font-size-control" aria-label="文字サイズ調整">
-
       <output
         id="fontSizeValue"
         class="font-size-value"
@@ -366,7 +359,6 @@
       >12px</output>
 
       <div class="font-size-slider-wrap">
-
         <span class="font-size-mark small" aria-hidden="true">あ</span>
 
         <input
@@ -381,13 +373,11 @@
         >
 
         <span class="font-size-mark large" aria-hidden="true">あ</span>
-
       </div>
     </div>
 
     <!-- カウント結果 -->
     <section class="results" aria-label="カウント結果">
-
       <div class="result-card">
         <span class="result-label">文字数</span>
         <span class="result-value">
@@ -419,8 +409,8 @@
           <span class="unit">行</span>
         </span>
       </div>
-
     </section>
+
   </main>
 
   <script>
@@ -496,8 +486,8 @@
           FONT_SIZE_STORAGE_KEY,
           String(size)
         );
-      } catch (error) {
-        // localStorage が使えない環境では保存を諦める
+      } catch {
+        // 保存できない場合は何もしない
       }
     }
 
@@ -509,7 +499,7 @@
         return saved === null
           ? DEFAULT_FONT_SIZE
           : saved;
-      } catch (error) {
+      } catch {
         return DEFAULT_FONT_SIZE;
       }
     }
@@ -532,11 +522,12 @@
     /* ===== ペースト ===== */
     pasteButton.addEventListener("click", async function () {
       try {
+        // クリップボード機能が使えない場合は何もしない
         if (
           !navigator.clipboard ||
           !navigator.clipboard.readText
         ) {
-          throw new Error("Clipboard API is not available");
+          return;
         }
 
         const clipboardText =
@@ -555,12 +546,8 @@
         setTimeout(function () {
           pasteButton.textContent = "ペースト";
         }, 1500);
-
-      } catch (error) {
-        alert(
-          "クリップボードを読み取れませんでした。\n" +
-          "ブラウザの貼り付け許可を確認するか、テキストボックス内で直接貼り付けてください。"
-        );
+      } catch {
+        // ペーストに失敗してもメッセージを表示しない
       }
     });
 
@@ -576,27 +563,26 @@
         setTimeout(function () {
           copyButton.textContent = "コピー";
         }, 1500);
+      } catch {
+        // 代替手段でコピーを試みる
+        try {
+          textInput.focus();
+          textInput.select();
 
-      } catch (error) {
-        textInput.focus();
-        textInput.select();
+          const copied = document.execCommand("copy");
 
-        const copied = document.execCommand("copy");
+          if (copied) {
+            copyButton.textContent = "コピーしました";
 
-        if (copied) {
-          copyButton.textContent = "コピーしました";
-
-          setTimeout(function () {
-            copyButton.textContent = "コピー";
-          }, 1500);
-
-        } else {
-          alert(
-            "コピーできませんでした。文章を選択してコピーしてください。"
-          );
+            setTimeout(function () {
+              copyButton.textContent = "コピー";
+            }, 1500);
+          }
+        } catch {
+          // コピーに失敗してもメッセージを表示しない
+        } finally {
+          window.getSelection()?.removeAllRanges();
         }
-
-        window.getSelection()?.removeAllRanges();
       }
     });
 
